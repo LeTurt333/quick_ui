@@ -78,12 +78,6 @@ const claimRewardsMsg = ({
 
 const Home: NextPage = () => {
 
-  // const [wasmFile, setWasmFile] = useState<File | null>(null);
-  // const [bytes, setBytes] = useState<Uint8Array | null>(null);
-  // const [id, setId] = useState<Number>(0);
-  //const [contractAddress, setContractAddress] = useState<string>("N/A");
-  //const [amount, setAmount] = useState<Number>();
-
   const [roundID, setRoundID] = useState<string>('');
 
   const [error, setError] = useState<string>('');
@@ -92,8 +86,8 @@ const Home: NextPage = () => {
 
   const [loading, setLoading] = useState<boolean>(false);
 
+  const [currentPos, setCurrentPosition] = useState<string>('');
 
-  
   const { walletAddress, signingClient, nickname, connectWallet, disconnect } =
     useSigningClient();
 
@@ -161,6 +155,44 @@ const Home: NextPage = () => {
       })
   }
 
+  const handleCheckRewards = () => {
+    if (walletAddress.length < 3 || !signingClient) {
+      console.log("No wallet connected");
+      setError("Wallet not connected")
+      toast.error("Wallet not connected");
+      return;
+    }
+
+    toast.loading("Processing query...");
+    setLoading(true);
+
+    //'{"my_current_position": {"address":"juno1..."}}'
+
+    signingClient.queryContractSmart(
+      "juno1uugwj8uneuvllu2e2znn2nfha0sq6n45stv6g3vg4w3v07uy2quqzxueun",
+      {
+        my_current_position: {
+          address: walletAddress
+        }
+      }
+    )
+    .then((r) => {
+      toast.dismiss();
+      toast.success(JSON.stringify(r, null, 2).replace(/,/g, ",\n"), {style: {maxWidth: 1000}});
+      setLoading(false);
+      setCurrentPosition(JSON.stringify(r, null, 2).replace(/,/g, ",\n"));
+      setError('');
+    })
+    .catch((e) => {
+      setCurrentPosition('');
+      toast.dismiss();
+      toast.error("Query failed");
+      toast.error(e.message);
+      setLoading(false);
+      setError(e);
+    })
+  }
+
 
 
   return (
@@ -171,36 +203,65 @@ const Home: NextPage = () => {
       </Head>
 
       <main className="grid grid-rows-6 w-full h-full">
-        <div className="row-span-2 flex px-10 justify-end">
+        <div className="row-span-1 flex px-10 justify-end">
           <button 
-            className="border-2 border-purple-600 hover:bg-purple-200 rounded-xl h-1/4 px-2 py-1"
+            className="border-2 border-purple-600 hover:bg-purple-200 rounded-xl h-1/2 px-2 py-1"
             onClick={handleConnect}
           >
             {walletAddress.length < 3 ? "Connect" : nickname}
           </button>
         </div>
-        <div className="row-span-2 flex flex-col gap-y-4 justify-center items-center border">
-          <div className="">
-            Last round found on chain: 10765
-          </div>
-          <div className="flex gap-x-4 justify-center items-center">
-          <span className="font-bold">
-            Round ID:
-          </span>
-          <input 
-              className="border border-purple-500" placeholder='round ID' onChange={e => setRoundID(e.target.value)}>
-              {/* className="border border-purple-500" type="number" onChange={e => setRoundID(e.target.value)}> */}
-          </input>
+        <div className="row-span-4 flex justify-between gap-x-10">
 
-          <button 
-            className="border-2 border-purple-600 hover:bg-purple-200 rounded-xl px-2 py-1"
-            onClick={() => loading === true ? toast.error("in process") : handleClaimRewards()}
-          >
-            {loading === true ? "Loading..." : "Claim"}
-          </button>
+          <div className="basis-1/2 flex flex-col gap-y-4 justify-center items-center">
+            <div className="">
+              Last round found on chain: 10765
+            </div>
+            <div className="flex gap-x-4 justify-center items-center">
+              <span className="font-bold">
+                Round ID:
+              </span>
+              <input 
+                  className="border border-purple-500" placeholder='round ID' onChange={e => setRoundID(e.target.value)}>
+                  {/* className="border border-purple-500" type="number" onChange={e => setRoundID(e.target.value)}> */}
+              </input>
+            </div>
+            <div className="flex justify-around w-1/2 gap-x-4">
+              <div className="flex flex-col gap-y-2">
+                <button 
+                  className="border-2 border-purple-600 hover:bg-purple-200 rounded-xl px-2 py-1"
+                  onClick={() => loading === true ? toast.error("in process") : handleClaimRewards()}
+                >
+                  {loading === true ? "Loading..." : "Claim"}
+                </button>
+                <span className="text-sm">
+                  Claim rewards
+                </span>
+              </div>
+            </div>
+          </div>
+
+        <div className="basis-1/2 flex flex-col bg-gray-200 p-1 ">
+          <div className="w-full p-2 border-b border-purple-500 flex gap-x-4 justify-center items-center ">
+            <button className="border-2 border-purple-600 hover:bg-purple-200 rounded-xl px-2 py-1"
+                  onClick={() => loading === true ? toast.error("in process") : handleCheckRewards()}
+            >
+              Check
+            </button>
+            <span>
+              Check for rewards
+            </span>
+          </div>
+          <div className="h-full">
+            {currentPos}
           </div>
         </div>
-        <div className="row-span-2 flex flex-col w-full gap-y-4 justify-center items-center ">
+        </div>
+
+
+
+
+        <div className="row-span-1 flex flex-col w-full gap-y-4 justify-center items-center ">
         <div className="flex gap-x-2">
             <span>
               Tx Hash:
