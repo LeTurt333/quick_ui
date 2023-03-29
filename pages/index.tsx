@@ -232,12 +232,12 @@ const Home: NextPage = () => {
 
       <footer className="flex h-24 w-full items-center justify-center border-t">
         <a
-          className="flex items-center justify-center gap-2"
-          href="https://github.com/hypnos-labs"
+          className="flex items-center justify-center gap-2 link link-hover"
+          href="https://github.com/LeTurt333/quick_ui"
           target="_blank"
           rel="noopener noreferrer"
         >
-          Github
+          Github for this UI
         </a>
       </footer>
     </div>
